@@ -99,20 +99,42 @@ function App() {
   const [selectedPet, setSelectedPet] = useState(null)
   const [timer, setTimer] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const [isWon, setIsWon] = useState(false)
+
+  // Check if the board is complete
+  const checkWin = (currentBoard) => {
+    // Check if all cells are filled
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (currentBoard[row][col] === null) {
+          return false
+        }
+      }
+    }
+    return true
+  }
+
+  // Check for win on initial load
+  useEffect(() => {
+    if (checkWin(board)) {
+      setIsWon(true)
+      window.alert(`🎉 Congratulations! You won in ${formatTime(timer)}! 🎉`)
+    }
+  }, []) // Empty dependency array means this runs once on mount
 
   // Timer effect
   useEffect(() => {
     let interval
-    if (isPlaying) {
+    if (isPlaying && !isWon) {
       interval = setInterval(() => {
         setTimer(prev => prev + 1)
       }, 1000)
     }
     return () => clearInterval(interval)
-  }, [isPlaying])
+  }, [isPlaying, isWon])
 
   const handleCellClick = (row, col) => {
-    if (!selectedPet) return
+    if (!selectedPet || isWon) return
     // Don't allow modifying pre-filled cells
     if (board[row][col] !== null && board[row][col] === selectedPet) {
       // If clicking the same pet that's already there, remove it
@@ -130,6 +152,10 @@ function App() {
       if (!isPlaying) {
         setIsPlaying(true)
       }
+      if (checkWin(newBoard)) {
+        setIsWon(true)
+        window.alert(`🎉 Congratulations! You won in ${formatTime(timer)}! 🎉`)
+      }
       return
     }
 
@@ -139,6 +165,10 @@ function App() {
     
     if (!isPlaying) {
       setIsPlaying(true)
+    }
+    if (checkWin(newBoard)) {
+      setIsWon(true)
+      window.alert(`🎉 Congratulations! You won in ${formatTime(timer)}! 🎉`)
     }
   }
 
@@ -152,12 +182,19 @@ function App() {
     <div className="game-container">
       <div className="timer">Time: {formatTime(timer)}</div>
       
+      {isWon && (
+        <div className="win-message">
+          🎉 Congratulations! You won! 🎉
+        </div>
+      )}
+
       <div className="pet-selector">
         {Object.entries(PETS).map(([num, emoji]) => (
           <button
             key={num}
             className={`pet-button ${selectedPet === num ? 'selected' : ''}`}
             onClick={() => setSelectedPet(num)}
+            disabled={isWon}
           >
             {emoji}
           </button>
@@ -170,7 +207,7 @@ function App() {
             {row.map((cell, colIndex) => (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className={`grid-cell ${cell !== null ? 'pre-filled' : ''}`}
+                className={`grid-cell ${cell !== null ? 'pre-filled' : ''} ${isWon ? 'won' : ''}`}
                 onClick={() => handleCellClick(rowIndex, colIndex)}
               >
                 {cell && PETS[cell]}
