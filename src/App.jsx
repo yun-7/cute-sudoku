@@ -14,7 +14,7 @@ const PETS = {
 }
 
 // Configuration
-const PRE_FILL_PERCENTAGE = 100 // Percentage of cells to pre-fill (25-30% is good for medium difficulty)
+const PRE_FILL_PERCENTAGE = 95 // Percentage of cells to pre-fill (25-30% is good for medium difficulty)
 
 // Helper function to check if a number is valid in a position
 const isValid = (board, row, col, num) => {
@@ -98,7 +98,7 @@ function App() {
   const [board, setBoard] = useState(generatePuzzle())
   const [selectedPet, setSelectedPet] = useState(null)
   const [timer, setTimer] = useState(0)
-  const [isPlaying, setIsPlaying] = useState(false)
+  const [isPlaying, setIsPlaying] = useState(true)
   const [isWon, setIsWon] = useState(false)
 
   // Check if the board is complete
@@ -118,7 +118,6 @@ function App() {
   useEffect(() => {
     if (checkWin(board)) {
       setIsWon(true)
-      window.alert(`🎉 Congratulations! You won in ${formatTime(timer)}! 🎉`)
     }
   }, []) // Empty dependency array means this runs once on mount
 
@@ -154,7 +153,6 @@ function App() {
       }
       if (checkWin(newBoard)) {
         setIsWon(true)
-        window.alert(`🎉 Congratulations! You won in ${formatTime(timer)}! 🎉`)
       }
       return
     }
@@ -168,7 +166,6 @@ function App() {
     }
     if (checkWin(newBoard)) {
       setIsWon(true)
-      window.alert(`🎉 Congratulations! You won in ${formatTime(timer)}! 🎉`)
     }
   }
 
