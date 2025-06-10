@@ -111,6 +111,33 @@ function App() {
         }
       }
     }
+
+    // Check each row, column, and 3x3 box
+    for (let i = 0; i < 9; i++) {
+      const rowSet = new Set()
+      const colSet = new Set()
+      const boxSet = new Set()
+      
+      for (let j = 0; j < 9; j++) {
+        // Check row
+        const rowValue = currentBoard[i][j]
+        if (rowValue < 1 || rowValue > 9 || rowSet.has(rowValue)) return false
+        rowSet.add(rowValue)
+        
+        // Check column
+        const colValue = currentBoard[j][i]
+        if (colValue < 1 || colValue > 9 || colSet.has(colValue)) return false
+        colSet.add(colValue)
+        
+        // Check 3x3 box
+        const boxRow = 3 * Math.floor(i / 3) + Math.floor(j / 3)
+        const boxCol = 3 * (i % 3) + (j % 3)
+        const boxValue = currentBoard[boxRow][boxCol]
+        if (boxValue < 1 || boxValue > 9 || boxSet.has(boxValue)) return false
+        boxSet.add(boxValue)
+      }
+    }
+
     return true
   }
 
@@ -134,37 +161,30 @@ function App() {
 
   const handleCellClick = (row, col) => {
     if (!selectedPet || isWon) return
-    // Don't allow modifying pre-filled cells
+
+    // Create a temporary board to check if the move is valid
+    const tempBoard = board.map(row => [...row])
+    
+    // If clicking the same pet that's already there, remove it
     if (board[row][col] !== null && board[row][col] === selectedPet) {
-      // If clicking the same pet that's already there, remove it
-      const newBoard = board.map(row => [...row])
-      newBoard[row][col] = null
-      setBoard(newBoard)
-      return
-    }
-    // Don't allow modifying pre-filled cells
-    if (board[row][col] !== null && board[row][col] !== selectedPet) {
-      // Allow overwriting with a different pet
-      const newBoard = board.map(row => [...row])
-      newBoard[row][col] = selectedPet
-      setBoard(newBoard)
-      if (!isPlaying) {
-        setIsPlaying(true)
-      }
-      if (checkWin(newBoard)) {
-        setIsWon(true)
-      }
+      tempBoard[row][col] = null
+      setBoard(tempBoard)
       return
     }
 
-    const newBoard = board.map(row => [...row])
-    newBoard[row][col] = selectedPet
-    setBoard(newBoard)
+    // Check if the move is valid before making it
+    if (!isValid(tempBoard, row, col, selectedPet)) {
+      return // Don't allow invalid moves
+    }
+
+    // Make the move
+    tempBoard[row][col] = selectedPet
+    setBoard(tempBoard)
     
     if (!isPlaying) {
       setIsPlaying(true)
     }
-    if (checkWin(newBoard)) {
+    if (checkWin(tempBoard)) {
       setIsWon(true)
     }
   }
