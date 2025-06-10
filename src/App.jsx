@@ -13,8 +13,89 @@ const PETS = {
   9: '🦁', // Maine Coon
 }
 
+// Configuration
+const PRE_FILL_PERCENTAGE = 90 // Percentage of cells to pre-fill (25-30% is good for medium difficulty)
+
+// Helper function to check if a number is valid in a position
+const isValid = (board, row, col, num) => {
+  // Check row
+  for (let x = 0; x < 9; x++) {
+    if (board[row][x] === num) return false
+  }
+
+  // Check column
+  for (let x = 0; x < 9; x++) {
+    if (board[x][col] === num) return false
+  }
+
+  // Check 3x3 box
+  const startRow = row - (row % 3)
+  const startCol = col - (col % 3)
+  for (let i = 0; i < 3; i++) {
+    for (let j = 0; j < 3; j++) {
+      if (board[i + startRow][j + startCol] === num) return false
+    }
+  }
+
+  return true
+}
+
+// Generate a solved Sudoku puzzle
+const generateSolvedPuzzle = () => {
+  const board = Array(9).fill().map(() => Array(9).fill(null))
+  
+  const solve = (row = 0, col = 0) => {
+    if (col === 9) {
+      row++
+      col = 0
+    }
+    if (row === 9) return true
+
+    if (board[row][col] !== null) {
+      return solve(row, col + 1)
+    }
+
+    const nums = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+    for (let i = nums.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1))
+      ;[nums[i], nums[j]] = [nums[j], nums[i]]
+    }
+
+    for (const num of nums) {
+      if (isValid(board, row, col, num)) {
+        board[row][col] = num
+        if (solve(row, col + 1)) return true
+        board[row][col] = null
+      }
+    }
+    return false
+  }
+
+  solve()
+  return board
+}
+
+// Create a puzzle with the specified percentage of cells filled
+const generatePuzzle = () => {
+  const solvedBoard = generateSolvedPuzzle()
+  const puzzle = solvedBoard.map(row => [...row])
+  const cellsToRemove = Math.floor(81 * (1 - PRE_FILL_PERCENTAGE / 100))
+  
+  let removed = 0
+  while (removed < cellsToRemove) {
+    const row = Math.floor(Math.random() * 9)
+    const col = Math.floor(Math.random() * 9)
+    if (puzzle[row][col] !== null) {
+      puzzle[row][col] = null
+      removed++
+    }
+  }
+  
+  return puzzle
+}
+
 function App() {
-  const [board, setBoard] = useState(Array(9).fill(Array(9).fill(null)))
+  const [board, setBoard] = useState(generatePuzzle())
   const [selectedPet, setSelectedPet] = useState(null)
   const [timer, setTimer] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
@@ -32,6 +113,8 @@ function App() {
 
   const handleCellClick = (row, col) => {
     if (!selectedPet) return
+    // Don't allow modifying pre-filled cells
+    if (board[row][col] !== null) return
 
     const newBoard = board.map(row => [...row])
     newBoard[row][col] = selectedPet
@@ -70,7 +153,7 @@ function App() {
             {row.map((cell, colIndex) => (
               <div
                 key={`${rowIndex}-${colIndex}`}
-                className="grid-cell"
+                className={`grid-cell ${cell !== null ? 'pre-filled' : ''}`}
                 onClick={() => handleCellClick(rowIndex, colIndex)}
               >
                 {cell && PETS[cell]}

@@ -107,6 +107,11 @@
   background-color: #f0f0f0;
 }
 
+.grid-cell.pre-filled {
+  background-color: #f8f8f8;
+  cursor: not-allowed;
+}
+
 /* Add borders for 3x3 boxes */
 .grid-row:nth-child(3n) .grid-cell {
   border-bottom: 2px solid #333;
