@@ -14,7 +14,7 @@ const PETS = {
 }
 
 // Configuration
-const PRE_FILL_PERCENTAGE = 90 // Percentage of cells to pre-fill (25-30% is good for medium difficulty)
+const PRE_FILL_PERCENTAGE = 100 // Percentage of cells to pre-fill (25-30% is good for medium difficulty)
 
 // Helper function to check if a number is valid in a position
 const isValid = (board, row, col, num) => {
@@ -114,7 +114,24 @@ function App() {
   const handleCellClick = (row, col) => {
     if (!selectedPet) return
     // Don't allow modifying pre-filled cells
-    if (board[row][col] !== null) return
+    if (board[row][col] !== null && board[row][col] === selectedPet) {
+      // If clicking the same pet that's already there, remove it
+      const newBoard = board.map(row => [...row])
+      newBoard[row][col] = null
+      setBoard(newBoard)
+      return
+    }
+    // Don't allow modifying pre-filled cells
+    if (board[row][col] !== null && board[row][col] !== selectedPet) {
+      // Allow overwriting with a different pet
+      const newBoard = board.map(row => [...row])
+      newBoard[row][col] = selectedPet
+      setBoard(newBoard)
+      if (!isPlaying) {
+        setIsPlaying(true)
+      }
+      return
+    }
 
     const newBoard = board.map(row => [...row])
     newBoard[row][col] = selectedPet
