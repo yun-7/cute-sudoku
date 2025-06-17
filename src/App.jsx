@@ -14,7 +14,7 @@ const PETS = {
 }
 
 // Configuration
-const PRE_FILL_PERCENTAGE = 100 // Percentage of cells to pre-fill (25-30% is good for medium difficulty)
+const PRE_FILL_PERCENTAGE = 90 // Percentage of cells to pre-fill (25-30% is good for medium difficulty)
 
 // Helper function to check if a number is valid in a position
 const isValid = (board, row, col, num) => {
@@ -100,27 +100,27 @@ function App() {
   const [timer, setTimer] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
   const [isWon, setIsWon] = useState(false)
+  const [solution, setSolution] = useState(null)
 
-  // Check if the board is complete
-  const checkWin = (currentBoard) => {
-    // Check if all cells are filled
-    for (let row = 0; row < 9; row++) {
-      for (let col = 0; col < 9; col++) {
-        if (currentBoard[row][col] === null) {
-          return false
-        }
+  useEffect(() => {
+    const solved = generateSolvedPuzzle()            // 產生完整解答
+    const puzzle = solved.map(row => [...row])       // 深拷貝一份作為題目
+  
+    const cellsToRemove = Math.floor(81 * (1 - PRE_FILL_PERCENTAGE / 100))
+    let removed = 0
+    while (removed < cellsToRemove) {
+      const row = Math.floor(Math.random() * 9)
+      const col = Math.floor(Math.random() * 9)
+      if (puzzle[row][col] !== null) {
+        puzzle[row][col] = null
+        removed++
       }
     }
-    return true
-  }
+  
+    setSolution(solved)     // 保存原始正解
+    setBoard(puzzle)        // 顯示題目
+  }, [])  
 
-  // Check for win on initial load
-  useEffect(() => {
-    if (checkWin(board)) {
-      setIsWon(true)
-      window.alert(`🎉 Congratulations! You won in ${formatTime(timer)}! 🎉`)
-    }
-  }, []) // Empty dependency array means this runs once on mount
 
   // Timer effect
   useEffect(() => {
@@ -133,6 +133,7 @@ function App() {
     return () => clearInterval(interval)
   }, [isPlaying, isWon])
 
+
   const handleCellClick = (row, col) => {
     if (!selectedPet || isWon) return
     // Don't allow modifying pre-filled cells
@@ -141,41 +142,59 @@ function App() {
       const newBoard = board.map(row => [...row])
       newBoard[row][col] = null
       setBoard(newBoard)
+      console.log(selectedPet)
       return
     }
+   
     // Don't allow modifying pre-filled cells
     if (board[row][col] !== null && board[row][col] !== selectedPet) {
       // Allow overwriting with a different pet
       const newBoard = board.map(row => [...row])
-      newBoard[row][col] = selectedPet
+      const valueToFill = Number(selectedPet)
+      newBoard[row][col] = valueToFill
       setBoard(newBoard)
       if (!isPlaying) {
         setIsPlaying(true)
       }
-      if (checkWin(newBoard)) {
+      if (isCorrect()) {
         setIsWon(true)
-        window.alert(`🎉 Congratulations! You won in ${formatTime(timer)}! 🎉`)
       }
       return
     }
-
+    const valueToFill = Number(selectedPet)
+    
     const newBoard = board.map(row => [...row])
-    newBoard[row][col] = selectedPet
+    newBoard[row][col] = valueToFill
     setBoard(newBoard)
     
     if (!isPlaying) {
       setIsPlaying(true)
     }
-    if (checkWin(newBoard)) {
+    if (isCorrect(newBoard, solution)) {
       setIsWon(true)
-      window.alert(`🎉 Congratulations! You won in ${formatTime(timer)}! 🎉`)
+    }else{
+      console.log(newBoard)
+      console.log(solution)
     }
   }
+  
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
+  }
+  
+  const isCorrect = (board, solution) => {
+      
+    for (let row = 0; row < 9; row++) {
+      for (let col = 0; col < 9; col++) {
+        if (board[row][col] !== solution[row][col]) {
+          return false
+        }
+      }
+    }
+    return true
   }
 
   return (
